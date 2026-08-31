@@ -11,6 +11,10 @@ from typing import Any
 
 TIMEOUT_SECONDS = 30
 
+# Bambu's WAF returns 403 to Python-urllib/* user agents; every other caller
+# tolerates this one, so it is applied everywhere.
+USER_AGENT = "bambu_network_agent/01.09.05.01"
+
 
 def request_json(
     url: str,
@@ -27,6 +31,7 @@ def request_json(
     data = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(url, data=data, method=method)
     req.add_header("Content-Type", "application/json")
+    req.add_header("User-Agent", USER_AGENT)
     for k, v in (headers or {}).items():
         req.add_header(k, v)
     context = ssl.create_default_context(cafile=cafile) if cafile else None

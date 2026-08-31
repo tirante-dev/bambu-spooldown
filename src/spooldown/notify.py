@@ -8,6 +8,7 @@ per insertion rather than every minute.
 import logging
 import urllib.request
 
+from spooldown.http import USER_AGENT
 from spooldown.mapper import Unmapped
 
 log = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ class Notifier:
             for u in sorted(unmapped.values(), key=lambda u: u.tray)
         ]
         req = urllib.request.Request(self._url, data="\n".join(lines).encode(), method="POST")
+        req.add_header("User-Agent", USER_AGENT)
         req.add_header("Title", "Spool needs mapping")
         req.add_header("Tags", "thread")
         req.add_header("Priority", "default")

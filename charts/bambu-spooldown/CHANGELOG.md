@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-chart-v0.2.0...bambu-spooldown-chart-v0.3.0) (2026-08-31)
+
+
+### Features
+
+* rotate bambu cloud tokens automatically ([#9](https://github.com/tirante-dev/bambu-spooldown/issues/9)) ([d117146](https://github.com/tirante-dev/bambu-spooldown/commit/d11714663a82f39482f3b4e6e9f3c301f987644f))
+
+
+### Bug Fixes
+
+* **helm:** update chart app version to 0.3.0 ([#12](https://github.com/tirante-dev/bambu-spooldown/issues/12)) ([dffc54d](https://github.com/tirante-dev/bambu-spooldown/commit/dffc54ddf6718383e441ed70aa49af3746821f35))
+
 ## [0.2.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-chart-v0.1.0...bambu-spooldown-chart-v0.2.0) (2026-08-31)
 
 

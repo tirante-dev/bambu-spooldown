@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-chart-v0.3.0...bambu-spooldown-chart-v0.4.0) (2026-08-31)
+
+
+### Features
+
+* auto-map third-party trays, notify via ntfy when ambiguous ([#14](https://github.com/tirante-dev/bambu-spooldown/issues/14)) ([c25a376](https://github.com/tirante-dev/bambu-spooldown/commit/c25a376262f20199d273f3e2f596b8e022926995))
+
+
+### Bug Fixes
+
+* **helm:** update chart app version to 0.4.0 ([c84976c](https://github.com/tirante-dev/bambu-spooldown/commit/c84976c9fab7319702122fe84e4b7b77d91dd37c))
+
 ## [0.3.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-chart-v0.2.0...bambu-spooldown-chart-v0.3.0) (2026-08-31)
 
 

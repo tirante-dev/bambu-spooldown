@@ -111,7 +111,10 @@ releases publish the chart, both to the same Harbor project.
 | `ACCESS_CODE` | yes | LAN access code (printer screen: Settings, Network) |
 | `SPOOLMAN_URL` | yes | Spoolman base URL, e.g. `http://spoolman:8000` |
 | `PRINTER_NAME` | no | Location-convention prefix, e.g. `3DP-31B-432` |
-| `BAMBU_CLOUD_TOKEN` | no | Bearer token for cloud-print usage lookup |
+| `BAMBU_CLOUD_TOKEN` | no | Seed access token for cloud-print usage lookup |
+| `BAMBU_CLOUD_REFRESH_TOKEN` | no | Seed refresh token; enables automatic rotation |
+| `TOKEN_SECRET_NAME` | no | Kubernetes Secret to persist the rotating pair (the chart sets this) |
+| `TOKEN_STATE_PATH` | no | Token state file outside Kubernetes, default `/data/cloud-token.json` |
 | `LEDGER_PATH` | no | Processed-jobs file, default `/data/ledger.json` |
 | `PARTIAL_ON_CANCEL` | no | `false` skips cancelled prints, default `true` |
 | `HEALTH_PORT` | no | Liveness HTTP port, default `8080` |
@@ -132,9 +135,13 @@ curl -X POST https://api.bambulab.com/v1/user-service/user/login \
   -d '{"account":"you@example.com","code":"<code from email>","loginType":"verifyCode"}'
 ```
 
-The second call returns `accessToken`; store it somewhere safe and pass it as
-`BAMBU_CLOUD_TOKEN`. Tokens expire after roughly 90 days; repeat the flow to
-get a new one.
+The second call returns `accessToken` and `refreshToken`; pass them as
+`BAMBU_CLOUD_TOKEN` and `BAMBU_CLOUD_REFRESH_TOKEN`. With both set, rotation
+is automatic: the service refreshes the pair before the ~90 day access-token
+expiry and persists the current pair (in the Kubernetes Secret named by
+`TOKEN_SECRET_NAME` in-cluster, else in `TOKEN_STATE_PATH`), so the env
+values are only a seed. Without a refresh token the access token dies after
+~90 days and the flow must be repeated.
 
 ## Limitations
 

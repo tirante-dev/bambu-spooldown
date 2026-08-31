@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "bambu-spooldown.fullname" . }}
+  labels: {{ include "bambu-spooldown.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "bambu-spooldown.fullname" . }}
+  labels: {{ include "bambu-spooldown.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["{{ .Values.cloudTokenSecret | default (printf "%s-cloud-token" (include "bambu-spooldown.fullname" .)) }}"]
+    verbs: ["get", "update"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "bambu-spooldown.fullname" . }}
+  labels: {{ include "bambu-spooldown.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "bambu-spooldown.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "bambu-spooldown.fullname" . }}

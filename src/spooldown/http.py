@@ -5,6 +5,7 @@ dependency.
 """
 
 import json
+import ssl
 import urllib.request
 from typing import Any
 
@@ -16,15 +17,18 @@ def request_json(
     method: str = "GET",
     body: dict[str, Any] | None = None,
     headers: dict[str, str] | None = None,
+    cafile: str | None = None,
 ) -> Any:
     """Performs one JSON request and decodes the JSON response.
 
-    Raises urllib.error.HTTPError on non-2xx responses.
+    Raises urllib.error.HTTPError on non-2xx responses. `cafile` pins a CA
+    bundle (the in-cluster apiserver CA) instead of the system store.
     """
     data = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(url, data=data, method=method)
     req.add_header("Content-Type", "application/json")
     for k, v in (headers or {}).items():
         req.add_header(k, v)
-    with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
+    context = ssl.create_default_context(cafile=cafile) if cafile else None
+    with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS, context=context) as resp:
         return json.load(resp)

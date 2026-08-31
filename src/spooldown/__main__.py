@@ -5,10 +5,12 @@ import os
 import signal
 import threading
 import time
+import urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
 from spooldown import usage
+from spooldown.cloud import FileTokenStore, K8sSecretStore, TokenManager, TokenStore
 from spooldown.config import Config
 from spooldown.ledger import Ledger
 from spooldown.printer import ReportStream, find_threemf
@@ -27,6 +29,12 @@ class Service:
         self._cfg = cfg
         self._spoolman = Spoolman(cfg.spoolman_url)
         self._ledger = Ledger(cfg.ledger_path)
+        store: TokenStore = (
+            K8sSecretStore(cfg.token_secret_name)
+            if cfg.token_secret_name
+            else FileTokenStore(cfg.token_state_path)
+        )
+        self.tokens = TokenManager(store, cfg.cloud_token, cfg.cloud_refresh_token)
         self._tracker = Tracker(self.on_job_done)
         self.stream = ReportStream(
             cfg.printer_host, cfg.printer_serial, cfg.access_code, self._tracker.handle
@@ -67,10 +75,16 @@ class Service:
                 )
                 return usage.per_tray_usage(grams, job.mapping)
             log.warning("job %s: 3MF not found on printer", job.task_id)
-        if self._cfg.cloud_token:
-            per_tray = usage.cloud_task_usage(
-                self._cfg.cloud_token, self._cfg.printer_serial, job.task_id
-            )
+        token = self.tokens.access()
+        if token:
+            try:
+                per_tray = usage.cloud_task_usage(token, self._cfg.printer_serial, job.task_id)
+            except urllib.error.HTTPError as e:
+                if e.code not in (401, 403) or not self.tokens.refresh():
+                    raise
+                fresh = self.tokens.access()
+                assert fresh is not None
+                per_tray = usage.cloud_task_usage(fresh, self._cfg.printer_serial, job.task_id)
             if per_tray is not None:
                 # A -1 key is an unattributed total; place it via the job mapping.
                 if -1 in per_tray and len(job.mapping) == 1 and job.mapping[0] >= 0:
@@ -96,6 +110,18 @@ class Service:
                 used,
                 fraction,
             )
+
+
+def refresh_loop(service: Service) -> None:
+    """Rotates the cloud token pair well before the ~90 day access expiry."""
+
+    def run() -> None:
+        while True:
+            if service.tokens.should_refresh_proactively():
+                service.tokens.refresh()
+            time.sleep(6 * 3600)
+
+    threading.Thread(target=run, daemon=True).start()
 
 
 def serve_health(service: Service, port: int) -> None:
@@ -124,6 +150,7 @@ def main() -> None:
     cfg = Config.from_env()
     service = Service(cfg)
     serve_health(service, cfg.health_port)
+    refresh_loop(service)
     service.stream.start()
     log.info(
         "spooldown watching printer %s for Spoolman at %s", cfg.printer_serial, cfg.spoolman_url

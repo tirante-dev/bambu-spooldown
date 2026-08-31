@@ -13,6 +13,8 @@ spoolman:
 
 existingSecret: ""
 
+cloudTokenSecret: ""
+
 persistence:
   enabled: true
   storageClass: ""

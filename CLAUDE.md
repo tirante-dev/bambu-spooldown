@@ -40,6 +40,11 @@ printer MQTT report ──▶ tracker (job state machine)
   what the Rdiger-36 AMS bridge writes (`SET_LOCATION=true`); third-party
   spools must have their location set by hand in Spoolman.
 - `ledger.py` persists processed task ids; a job decrements exactly once.
+- `cloud.py` owns the Bambu cloud token pair: env tokens only seed an empty
+  store (a self-managed Kubernetes Secret in-cluster, a JSON file otherwise),
+  refresh happens on 401 and proactively past 30 days. The store Secret is
+  deliberately separate from the sealed seed secret so ArgoCD and
+  sealed-secrets never reconcile the rotated values away.
 - Cancelled/failed prints decrement proportionally to `mc_percent`
   (`PARTIAL_ON_CANCEL=false` disables).
 

@@ -6,13 +6,13 @@ import signal
 import threading
 import time
 import urllib.error
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any
 
-from spooldown import usage
+from spooldown import usage, web
 from spooldown.cloud import FileTokenStore, K8sSecretStore, TokenManager, TokenStore
 from spooldown.config import Config
 from spooldown.ledger import Ledger
+from spooldown.mapper import Mapper
+from spooldown.notify import Notifier
 from spooldown.printer import ReportStream, find_threemf
 from spooldown.spoolman import Spoolman, resolve_tray
 from spooldown.tracker import Job, Tracker
@@ -27,7 +27,9 @@ class Service:
 
     def __init__(self, cfg: Config) -> None:
         self._cfg = cfg
-        self._spoolman = Spoolman(cfg.spoolman_url)
+        self.spoolman = Spoolman(cfg.spoolman_url)
+        self.mapper = Mapper(self.spoolman, cfg.printer_name)
+        self.notifier = Notifier(cfg.ntfy_url, cfg.map_url)
         self._ledger = Ledger(cfg.ledger_path)
         store: TokenStore = (
             K8sSecretStore(cfg.token_secret_name)
@@ -35,9 +37,9 @@ class Service:
             else FileTokenStore(cfg.token_state_path)
         )
         self.tokens = TokenManager(store, cfg.cloud_token, cfg.cloud_refresh_token)
-        self._tracker = Tracker(self.on_job_done)
+        self.tracker = Tracker(self.on_job_done)
         self.stream = ReportStream(
-            cfg.printer_host, cfg.printer_serial, cfg.access_code, self._tracker.handle
+            cfg.printer_host, cfg.printer_serial, cfg.access_code, self.tracker.handle
         )
 
     def on_job_done(self, job: Job, fraction: float) -> None:
@@ -95,13 +97,13 @@ class Service:
         return {}
 
     def _apply(self, job: Job, per_tray: dict[int, float], fraction: float) -> None:
-        spools = self._spoolman.spools()
+        spools = self.spoolman.spools()
         for tray, grams in sorted(per_tray.items()):
             spool_id = resolve_tray(spools, tray, job.tray_uuids.get(tray), self._cfg.printer_name)
             if spool_id is None:
                 continue
             used = grams * fraction
-            self._spoolman.use_weight(spool_id, used)
+            self.spoolman.use_weight(spool_id, used)
             log.info(
                 "job %s: tray A%d -> spool %d, used %.2fg (fraction %.2f)",
                 job.task_id,
@@ -110,6 +112,24 @@ class Service:
                 used,
                 fraction,
             )
+
+
+def mapper_loop(service: Service) -> None:
+    """Auto-maps third-party trays and pushes a phone notification otherwise."""
+
+    def run() -> None:
+        while True:
+            time.sleep(60)
+            trays = service.tracker.trays()
+            if not trays:
+                continue
+            try:
+                service.mapper.evaluate(trays)
+                service.notifier.observe(service.mapper.unmapped)
+            except Exception:
+                log.exception("tray mapping pass failed")
+
+    threading.Thread(target=run, daemon=True).start()
 
 
 def refresh_loop(service: Service) -> None:
@@ -124,24 +144,6 @@ def refresh_loop(service: Service) -> None:
     threading.Thread(target=run, daemon=True).start()
 
 
-def serve_health(service: Service, port: int) -> None:
-    """Liveness endpoint: unhealthy when the report stream has gone quiet."""
-
-    class Handler(BaseHTTPRequestHandler):
-        def do_GET(self) -> None:
-            age = time.monotonic() - service.stream.last_message_at
-            healthy = service.stream.last_message_at > 0 and age < STALE_AFTER_SECONDS
-            self.send_response(200 if healthy else 503)
-            self.end_headers()
-            self.wfile.write(b"ok" if healthy else b"stale")
-
-        def log_message(self, fmt: str, *args: Any) -> None:
-            return
-
-    server = ThreadingHTTPServer(("", port), Handler)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-
-
 def main() -> None:
     logging.basicConfig(
         level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -149,7 +151,8 @@ def main() -> None:
     )
     cfg = Config.from_env()
     service = Service(cfg)
-    serve_health(service, cfg.health_port)
+    web.serve(service, cfg.health_port)
+    mapper_loop(service)
     refresh_loop(service)
     service.stream.start()
     log.info(

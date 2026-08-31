@@ -62,8 +62,14 @@ For each AMS tray a job used:
 1. RFID spools match on the tray uuid against Spoolman's `tag` extra field.
 2. Third-party spools (no RFID) match on the spool whose location is
    `<PRINTER_NAME> - A<tray>`, e.g. `3DP-31B-432 - A3` for the fourth slot of
-   the first AMS. Create the spool in Spoolman yourself and set that location
-   once, when you load it.
+   the first AMS (tray numbers are the printer's 0-based protocol ids, one
+   less than the labels in Bambu Studio). You normally never set this by
+   hand: a mapper pass runs every minute, and when a third-party tray's
+   configured material (and color, to break ties) matches exactly one active
+   untagged spool, the location is set automatically. When it is ambiguous,
+   or a mapped tray's contents stop matching its spool, spooldown pushes a
+   notification to `NTFY_URL` with a tap-through to its `/map` page, where
+   one radio button and one click finish the job.
 
 ## Run
 
@@ -141,6 +147,8 @@ releases publish the chart, both to the same Harbor project.
 | `BAMBU_CLOUD_REFRESH_TOKEN` | no | Seed refresh token; enables automatic rotation |
 | `TOKEN_SECRET_NAME` | no | Kubernetes Secret to persist the rotating pair (the chart sets this) |
 | `TOKEN_STATE_PATH` | no | Token state file outside Kubernetes, default `/data/cloud-token.json` |
+| `NTFY_URL` | no | ntfy topic URL; unmapped third-party trays push a phone notification |
+| `MAP_URL` | no | Public URL of the `/map` page, used as the notification's tap action |
 | `LEDGER_PATH` | no | Processed-jobs file, default `/data/ledger.json` |
 | `PARTIAL_ON_CANCEL` | no | `false` skips cancelled prints, default `true` |
 | `HEALTH_PORT` | no | Liveness HTTP port, default `8080` |

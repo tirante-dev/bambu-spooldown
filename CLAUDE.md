@@ -40,6 +40,10 @@ printer MQTT report ──▶ tracker (job state machine)
   what the Rdiger-36 AMS bridge writes (`SET_LOCATION=true`); third-party
   spools must have their location set by hand in Spoolman.
 - `ledger.py` persists processed task ids; a job decrements exactly once.
+- `mapper.py` auto-maps third-party trays (material, then color distance
+  under 60 to break ties) and only when exactly one candidate remains;
+  anything ambiguous or a stale mapping goes to `notify.py` (ntfy POST,
+  debounced on the unmapped-set signature) and the `/map` page in `web.py`.
 - `cloud.py` owns the Bambu cloud token pair: env tokens only seed an empty
   store (a self-managed Kubernetes Secret in-cluster, a JSON file otherwise),
   refresh happens on 401 and proactively past 30 days. The store Secret is

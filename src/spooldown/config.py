@@ -24,6 +24,8 @@ class Config:
     ledger_path: str
     partial_on_cancel: bool
     health_port: int
+    ntfy_url: str | None
+    map_url: str | None
 
     @staticmethod
     def from_env(env: dict[str, str] | None = None) -> "Config":
@@ -49,4 +51,6 @@ class Config:
             ledger_path=e.get("LEDGER_PATH", "/data/ledger.json"),
             partial_on_cancel=e.get("PARTIAL_ON_CANCEL", "true").lower() != "false",
             health_port=int(e.get("HEALTH_PORT", "8080")),
+            ntfy_url=e.get("NTFY_URL") or None,
+            map_url=e.get("MAP_URL") or None,
         )

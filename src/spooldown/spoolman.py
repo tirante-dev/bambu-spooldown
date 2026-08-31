@@ -20,6 +20,9 @@ class Spoolman:
         assert isinstance(out, list)
         return out
 
+    def set_location(self, spool_id: int, location: str) -> None:
+        request_json(f"{self._base}/spool/{spool_id}", method="PATCH", body={"location": location})
+
     def use_weight(self, spool_id: int, grams: float) -> None:
         request_json(
             f"{self._base}/spool/{spool_id}/use",

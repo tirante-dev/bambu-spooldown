@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  check:
+    runs-on: spooldown
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - run: make check
+
+  image:
+    needs: check
+    runs-on: spooldown
+    steps:
+      - uses: actions/checkout@v4
+      - name: build
+        run: docker build -t ghcr.io/${{ github.repository }}:sha-$(git rev-parse --short HEAD) .
+      - name: push
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          tag=sha-$(git rev-parse --short HEAD)
+          docker tag "ghcr.io/${{ github.repository }}:$tag" "ghcr.io/${{ github.repository }}:latest"
+          docker push "ghcr.io/${{ github.repository }}:$tag"
+          docker push "ghcr.io/${{ github.repository }}:latest"

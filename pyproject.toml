@@ -1,5 +1,5 @@
 [project]
-name = "spooldown"
+name = "bambu-spooldown"
 version = "0.1.0"
 description = "Counts Bambu Lab print jobs down against Spoolman spool inventory"
 readme = "README.md"

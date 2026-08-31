@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   check:
-    runs-on: spooldown
+    runs-on: bambu-spooldown
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -20,7 +20,7 @@ jobs:
 
   image:
     needs: check
-    runs-on: spooldown
+    runs-on: bambu-spooldown
     steps:
       - uses: actions/checkout@v4
       - name: build

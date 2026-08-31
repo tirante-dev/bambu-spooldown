@@ -1,4 +1,4 @@
-# spooldown
+# bambu-spooldown
 
 Counts Bambu Lab print jobs down against
 [Spoolman](https://github.com/Donkie/Spoolman) spool inventory.
@@ -40,7 +40,7 @@ locally for them.
 ```
 docker run -e PRINTER_HOST=... -e PRINTER_SERIAL=... -e ACCESS_CODE=... \
   -e SPOOLMAN_URL=http://spoolman:8000 -v spooldown-data:/data \
-  ghcr.io/tirante-dev/spooldown:latest
+  ghcr.io/tirante-dev/bambu-spooldown:latest
 ```
 
 `GET :8080/` answers 200 while the MQTT stream is live, 503 when stale.

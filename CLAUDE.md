@@ -6,7 +6,7 @@ never replace the symlink with a second copy.
 
 ## What this is
 
-**spooldown**: a small daemon that watches one Bambu Lab printer over local
+**bambu-spooldown**: a small daemon that watches one Bambu Lab printer over local
 MQTT and decrements [Spoolman](https://github.com/Donkie/Spoolman) spools by
 the sliced per-filament weight when a print finishes. It exists because the
 AMS only reports remaining filament for Bambu RFID spools; third-party spools
@@ -62,7 +62,7 @@ printer MQTT report ──▶ tracker (job state machine)
 - Config is env-only: `PRINTER_HOST`, `PRINTER_SERIAL`, `ACCESS_CODE`,
   `SPOOLMAN_URL` required; `PRINTER_NAME`, `BAMBU_CLOUD_TOKEN`, `LEDGER_PATH`,
   `PARTIAL_ON_CANCEL`, `HEALTH_PORT`, `LOG_LEVEL` optional.
-- CI pushes `ghcr.io/tirante-dev/spooldown` (`latest` + `sha-<short>`) on
+- CI pushes `ghcr.io/tirante-dev/bambu-spooldown` (`latest` + `sha-<short>`) on
   merge to main. Deployment manifests live in the homelab repo, not here.
 
 ## Code comments and prose

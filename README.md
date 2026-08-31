@@ -49,7 +49,7 @@ docker run -d --name bambu-spooldown \
   -e PRINTER_NAME=3DP-31B-432 \
   -e SPOOLMAN_URL=http://spoolman:8000 \
   -v bambu-spooldown-data:/data \
-  ghcr.io/tirante-dev/bambu-spooldown:latest
+  registry.ahkc.win/bambu-spooldown/bambu-spooldown:latest
 ```
 
 Or with compose:
@@ -57,7 +57,7 @@ Or with compose:
 ```yaml
 services:
   bambu-spooldown:
-    image: ghcr.io/tirante-dev/bambu-spooldown:latest
+    image: registry.ahkc.win/bambu-spooldown/bambu-spooldown:latest
     restart: unless-stopped
     environment:
       PRINTER_HOST: 192.168.1.50

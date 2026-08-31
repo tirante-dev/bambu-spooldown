@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-chart-v0.4.0...bambu-spooldown-chart-v0.5.0) (2026-08-31)
+
+
+### Features
+
+* automatic token renewal via mailbox code login, metrics ([#22](https://github.com/tirante-dev/bambu-spooldown/issues/22)) ([792d806](https://github.com/tirante-dev/bambu-spooldown/commit/792d8060108cac6d09bc09cea6e4146a190287a8))
+
+
+### Bug Fixes
+
+* **helm:** update chart app version to 0.4.1 ([98d30fd](https://github.com/tirante-dev/bambu-spooldown/commit/98d30fdc5d7881c102db652c0ef37b707d04eb2d))
+* **helm:** update chart app version to 0.5.0 ([b784f86](https://github.com/tirante-dev/bambu-spooldown/commit/b784f86f110421a76bb283e7c600cdebb49d218e))
+
 ## [0.4.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-chart-v0.3.0...bambu-spooldown-chart-v0.4.0) (2026-08-31)
 
 

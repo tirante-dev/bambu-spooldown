@@ -78,6 +78,9 @@ def serve(service: "Service", port: int) -> None:
             if self.path.startswith("/map"):
                 self._send(200, render_map(service).encode())
                 return
+            if self.path.startswith("/metrics"):
+                self._send(200, service.metrics.render().encode(), "text/plain; version=0.0.4")
+                return
             age = time.monotonic() - service.stream.last_message_at
             healthy = service.stream.last_message_at > 0 and age < STALE_AFTER_SECONDS
             self._send(200 if healthy else 503, b"ok" if healthy else b"stale", "text/plain")

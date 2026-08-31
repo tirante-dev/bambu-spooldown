@@ -21,6 +21,7 @@ log = logging.getLogger(__name__)
 
 REFRESH_URL = "https://api.bambulab.com/v1/user-service/user/refreshtoken"
 PROACTIVE_REFRESH_AFTER_SECONDS = 30 * 24 * 3600
+RENEW_AFTER_SECONDS = 60 * 24 * 3600
 RENEWAL_WARNING_AFTER_SECONDS = 75 * 24 * 3600
 
 SA_DIR = "/var/run/secrets/kubernetes.io/serviceaccount"
@@ -146,32 +147,40 @@ class TokenManager:
         except (TypeError, ValueError):
             return None
 
-    def refresh(self) -> bool:
-        token = self._state.get("refresh")
-        if not token:
-            log.warning("no refresh token available; re-seed BAMBU_CLOUD_REFRESH_TOKEN")
-            return False
-        try:
-            out = request_json(REFRESH_URL, method="POST", body={"refreshToken": token})
-        except (urllib.error.HTTPError, urllib.error.URLError, OSError) as e:
-            log.warning("cloud token refresh failed: %s", e)
-            return False
-        access, refresh = out.get("accessToken"), out.get("refreshToken")
-        if not access:
-            log.warning("cloud token refresh returned no accessToken")
-            return False
+    def adopt(self, access: str, refresh: str) -> None:
+        """Installs a freshly minted pair (from refresh or a code login)."""
         self._state = {
             "access": access,
-            "refresh": refresh or token,
+            "refresh": refresh,
             "seed": self._state.get("seed", ""),
             "refreshed_at": str(int(time.time())),
         }
         try:
             self._store.save(self._state)
         except Exception:
-            log.exception("failed to persist refreshed cloud token; continuing in memory")
+            log.exception("failed to persist adopted cloud token; continuing in memory")
+
+    def refresh(self) -> bool:
+        token = self._state.get("refresh")
+        if not token:
+            return False
+        try:
+            out = request_json(REFRESH_URL, method="POST", body={"refreshToken": token})
+        except (urllib.error.HTTPError, urllib.error.URLError, OSError) as e:
+            log.debug("cloud token refresh failed (endpoint is dead upstream): %s", e)
+            return False
+        access, refresh = out.get("accessToken"), out.get("refreshToken")
+        if not access:
+            return False
+        self.adopt(access, refresh or token)
         log.info("cloud token refreshed")
         return True
+
+    def needs_renewal_attempt(self) -> bool:
+        if not self._state.get("access"):
+            return False
+        age = self.age_seconds()
+        return age is not None and age > RENEW_AFTER_SECONDS
 
     def should_refresh_proactively(self) -> bool:
         if not self._state.get("refresh"):

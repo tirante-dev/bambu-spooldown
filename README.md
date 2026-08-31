@@ -148,6 +148,8 @@ releases publish the chart, both to the same Harbor project.
 | `TOKEN_SECRET_NAME` | no | Kubernetes Secret to persist the rotating pair (the chart sets this) |
 | `TOKEN_STATE_PATH` | no | Token state file outside Kubernetes, default `/data/cloud-token.json` |
 | `NTFY_URL` | no | ntfy topic URL; unmapped third-party trays push a phone notification |
+| `MAILBOX_URL` | no | Mailpit-compatible mailbox API receiving Bambu verification emails; enables automatic token renewal |
+| `BAMBU_ACCOUNT_EMAIL` | no | Bambu account email, required with `MAILBOX_URL` |
 | `MAP_URL` | no | Public URL of the `/map` page, used as the notification's tap action |
 | `LEDGER_PATH` | no | Processed-jobs file, default `/data/ledger.json` |
 | `PARTIAL_ON_CANCEL` | no | `false` skips cancelled prints, default `true` |
@@ -170,12 +172,25 @@ curl -X POST https://api.bambulab.com/v1/user-service/user/login \
 ```
 
 The second call returns `accessToken` and `refreshToken`; pass them as
-`BAMBU_CLOUD_TOKEN` and `BAMBU_CLOUD_REFRESH_TOKEN`. With both set, rotation
-is automatic: the service refreshes the pair before the ~90 day access-token
-expiry and persists the current pair (in the Kubernetes Secret named by
-`TOKEN_SECRET_NAME` in-cluster, else in `TOKEN_STATE_PATH`), so the env
-values are only a seed. Without a refresh token the access token dies after
-~90 days and the flow must be repeated.
+`BAMBU_CLOUD_TOKEN` and `BAMBU_CLOUD_REFRESH_TOKEN`. They seed a store (the
+Kubernetes Secret named by `TOKEN_SECRET_NAME` in-cluster, else
+`TOKEN_STATE_PATH`).
+
+Bambu's refresh endpoint is dead (it 401s for everyone), so tokens die after
+roughly 90 days. Two layers deal with that:
+
+- With `MAILBOX_URL` and `BAMBU_ACCOUNT_EMAIL` set, renewal is fully
+  automatic: past 60 days the service replays the code login, reading the
+  verification code from a receive-only mailbox (Mailpit API) that your mail
+  provider forwards Bambu's emails into. Attempts back off to roughly one
+  per day; codes and tokens are never logged.
+- Past 75 days (renewal failing or not configured), a weekly ntfy nudge asks
+  a human to run the flow above.
+
+`GET /metrics` exposes Prometheus metrics, and the chart can ship a
+ServiceMonitor and alert rules (`monitoring.serviceMonitor`,
+`monitoring.rules`) covering token age, MQTT staleness, unaccounted jobs,
+and long-unmapped trays.
 
 ## Limitations
 

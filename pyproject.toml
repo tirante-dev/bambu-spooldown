@@ -1,6 +1,6 @@
 [project]
 name = "bambu-spooldown"
-version = "0.2.0"
+version = "0.3.0"
 description = "Counts Bambu Lab print jobs down against Spoolman spool inventory"
 readme = "README.md"
 requires-python = ">=3.13"

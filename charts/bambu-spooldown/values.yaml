@@ -1,0 +1,30 @@
+image:
+  repository: registry.ahkc.win/bambu-spooldown/bambu-spooldown
+  tag: ""
+  pullPolicy: IfNotPresent
+
+printer:
+  host: ""
+  serial: ""
+  name: ""
+
+spoolman:
+  url: ""
+
+existingSecret: ""
+
+persistence:
+  enabled: true
+  storageClass: ""
+  size: 1Gi
+  existingClaim: ""
+
+extraEnv: []
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi

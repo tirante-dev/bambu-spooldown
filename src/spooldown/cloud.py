@@ -21,6 +21,7 @@ log = logging.getLogger(__name__)
 
 REFRESH_URL = "https://api.bambulab.com/v1/user-service/user/refreshtoken"
 PROACTIVE_REFRESH_AFTER_SECONDS = 30 * 24 * 3600
+RENEWAL_WARNING_AFTER_SECONDS = 75 * 24 * 3600
 
 SA_DIR = "/var/run/secrets/kubernetes.io/serviceaccount"
 
@@ -121,10 +122,19 @@ class TokenManager:
     ) -> None:
         self._store = store
         self._state = store.load() or {}
-        if not self._state.get("access") and seed_access:
-            self._state = {"access": seed_access, "refresh": seed_refresh or ""}
-            # refreshed_at unset marks a seed of unknown age; the proactive
-            # loop refreshes it on first opportunity to learn the real age.
+        if seed_access and self._state.get("seed") != seed_access:
+            # A changed seed means freshly minted tokens were sealed in;
+            # adopt them and date the pair from now.
+            self._state = {
+                "access": seed_access,
+                "refresh": seed_refresh or "",
+                "seed": seed_access,
+                "refreshed_at": str(int(time.time())),
+            }
+            try:
+                store.save(self._state)
+            except Exception:
+                log.exception("failed to persist seeded cloud token; continuing in memory")
 
     def access(self) -> str | None:
         return self._state.get("access") or None
@@ -153,6 +163,7 @@ class TokenManager:
         self._state = {
             "access": access,
             "refresh": refresh or token,
+            "seed": self._state.get("seed", ""),
             "refreshed_at": str(int(time.time())),
         }
         try:
@@ -167,3 +178,15 @@ class TokenManager:
             return False
         age = self.age_seconds()
         return age is None or age > PROACTIVE_REFRESH_AFTER_SECONDS
+
+    def needs_renewal(self) -> bool:
+        """True when the pair is old enough that a human should re-login.
+
+        Bambu's refresh endpoint rejects tokens minted by the email-code
+        login, so rotation cannot be assumed to work; access tokens die at
+        roughly 90 days and this warns with margin.
+        """
+        if not self._state.get("access"):
+            return False
+        age = self.age_seconds()
+        return age is not None and age > RENEWAL_WARNING_AFTER_SECONDS

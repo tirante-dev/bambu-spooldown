@@ -41,6 +41,12 @@ For each AMS tray a job used:
 
 ## Run
 
+Two artifacts are published to `registry.ahkc.win` per release: the container
+image (`bambu-spooldown/bambu-spooldown`, semver tags plus `latest`) and a
+Helm chart (`oci://registry.ahkc.win/bambu-spooldown/charts/bambu-spooldown`).
+
+### Docker
+
 ```
 docker run -d --name bambu-spooldown \
   -e PRINTER_HOST=192.168.1.50 \
@@ -52,7 +58,7 @@ docker run -d --name bambu-spooldown \
   registry.ahkc.win/bambu-spooldown/bambu-spooldown:latest
 ```
 
-Or with compose:
+### Docker Compose
 
 ```yaml
 services:
@@ -72,8 +78,10 @@ volumes:
   data:
 ```
 
-Or on Kubernetes, with a Secret holding `ACCESS_CODE` (and optionally
-`BAMBU_CLOUD_TOKEN`):
+### Helm
+
+Create a Secret holding `ACCESS_CODE` (and optionally `BAMBU_CLOUD_TOKEN`),
+then:
 
 ```
 helm install spooldown oci://registry.ahkc.win/bambu-spooldown/charts/bambu-spooldown \
@@ -84,12 +92,15 @@ helm install spooldown oci://registry.ahkc.win/bambu-spooldown/charts/bambu-spoo
   --set existingSecret=spooldown-env
 ```
 
+The chart source is [charts/bambu-spooldown](charts/bambu-spooldown); see its
+[values.yaml](charts/bambu-spooldown/values.yaml) for every knob (image tag
+defaults to the chart's appVersion, persistence, resources, extraEnv).
+
 `GET :8080/` answers 200 while the MQTT stream is live and 503 when it has
 gone stale, so it works as a container healthcheck or Kubernetes probe.
 
-Releases are cut by release-please; each app release publishes the image
-tagged with its semver plus `latest`, and each chart release publishes the
-chart to the same registry.
+Releases are cut by release-please; app releases publish the image, chart
+releases publish the chart, both to the same Harbor project.
 
 ## Configuration
 

@@ -156,6 +156,31 @@ releases publish the chart, both to the same Harbor project.
 | `HEALTH_PORT` | no | Liveness HTTP port, default `8080` |
 | `LOG_LEVEL` | no | Python log level, default `INFO` |
 
+## Security considerations of automatic renewal
+
+None of this machinery would exist if Bambu had kept their token refresh
+endpoint alive. It 401s for everyone now, so the only way to keep a working
+token without a human in the loop is to replay the email-code login, and
+that carries real trade-offs. Weigh them before enabling `MAILBOX_URL`:
+
+- **The mailbox receives genuine Bambu login codes.** Anyone who can read
+  it can complete a code login and take over the Bambu account, including
+  remote control of the printer through Bambu's cloud. The mailbox API is
+  unauthenticated by design; run it only on a network you trust end to end
+  (in-cluster plus tailnet here) and never expose it publicly. Scope the
+  mail forward to Bambu's sender so nothing else lands in it.
+- **The mailbox accepts unauthenticated SMTP** to one secret keyed address,
+  with no SPF/DKIM verification. Someone who learns the address can inject
+  forged mail. A forged code merely fails the login; the realistic worst
+  case is drowning out real codes, which stalls renewal until the ntfy
+  nudge brings a human back. Rotate the address if it ever leaks.
+- **Login-code emails stay meaningful.** Renewal asks Bambu for a code only
+  past 60 days of token age and at most about once a day, so a verification
+  email you did not trigger is still the account-takeover signal it always
+  was, not routine noise.
+- Codes and tokens are never logged; the pair lives in a Kubernetes Secret
+  (or the state file) and nowhere else.
+
 ## Getting a cloud token
 
 Bambu's email-code login works even for accounts that sign in with Apple or

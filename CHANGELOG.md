@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.4.1...bambu-spooldown-v0.5.0) (2026-08-31)
+
+
+### Features
+
+* automatic token renewal via mailbox code login, metrics ([#22](https://github.com/tirante-dev/bambu-spooldown/issues/22)) ([792d806](https://github.com/tirante-dev/bambu-spooldown/commit/792d8060108cac6d09bc09cea6e4146a190287a8))
+* nudge for token renewal, refresh is closed to email-code logins ([#20](https://github.com/tirante-dev/bambu-spooldown/issues/20)) ([6dff65d](https://github.com/tirante-dev/bambu-spooldown/commit/6dff65df81dc9b9eb4c653d390b6502cacc90bcb))
+
 ## [0.4.1](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.4.0...bambu-spooldown-v0.4.1) (2026-08-31)
 
 

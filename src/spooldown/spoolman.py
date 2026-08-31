@@ -4,7 +4,7 @@ import json
 import logging
 from typing import Any
 
-import httpx
+from spooldown.http import request_json
 
 log = logging.getLogger(__name__)
 
@@ -13,18 +13,19 @@ class Spoolman:
     """Thin client for the two Spoolman calls this service needs."""
 
     def __init__(self, base_url: str) -> None:
-        self._client = httpx.Client(base_url=f"{base_url}/api/v1", timeout=30)
+        self._base = f"{base_url}/api/v1"
 
     def spools(self) -> list[dict[str, Any]]:
-        resp = self._client.get("/spool")
-        resp.raise_for_status()
-        out = resp.json()
+        out = request_json(f"{self._base}/spool")
         assert isinstance(out, list)
         return out
 
     def use_weight(self, spool_id: int, grams: float) -> None:
-        resp = self._client.put(f"/spool/{spool_id}/use", json={"use_weight": round(grams, 2)})
-        resp.raise_for_status()
+        request_json(
+            f"{self._base}/spool/{spool_id}/use",
+            method="PUT",
+            body={"use_weight": round(grams, 2)},
+        )
 
 
 def spool_tag(spool: dict[str, Any]) -> str | None:

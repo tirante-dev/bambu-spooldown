@@ -12,8 +12,9 @@ import logging
 import xml.etree.ElementTree as ET
 import zipfile
 from io import BytesIO
+from urllib.parse import urlencode
 
-import httpx
+from spooldown.http import request_json
 
 log = logging.getLogger(__name__)
 
@@ -74,14 +75,12 @@ def cloud_task_usage(token: str, serial: str, task_id: str) -> dict[int, float] 
     Tasks without it (single filament) fall back to the task's total weight,
     which the caller attributes via the job mapping.
     """
-    resp = httpx.get(
-        CLOUD_TASKS_URL,
-        params={"deviceId": serial, "limit": 40},
+    query = urlencode({"deviceId": serial, "limit": 40})
+    data = request_json(
+        f"{CLOUD_TASKS_URL}?{query}",
         headers={"Authorization": f"Bearer {token}"},
-        timeout=30,
     )
-    resp.raise_for_status()
-    for task in resp.json().get("hits", []):
+    for task in data.get("hits", []):
         if str(task.get("id")) != task_id:
             continue
         detail = task.get("amsDetailMapping") or []

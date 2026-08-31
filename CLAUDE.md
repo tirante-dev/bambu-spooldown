@@ -43,7 +43,7 @@ printer MQTT report ──▶ tracker (job state machine)
 - Cancelled/failed prints decrement proportionally to `mc_percent`
   (`PARTIAL_ON_CANCEL=false` disables).
 
-## Hard-won protocol facts (verified against an H2D, firmware 01.02.00.00)
+## Hard-won protocol facts (verified against an H2C, firmware 01.02.00.00)
 
 - FTPS is implicit TLS on 990, login `bblp` / access code, and the data
   channel **must resume the control connection's TLS session** or the server

@@ -18,6 +18,32 @@ Usage evidence, per print:
   weights come from the Bambu cloud task API. This needs `BAMBU_CLOUD_TOKEN`;
   without it, cloud prints log a warning and record nothing.
 
+## Why this one
+
+Most Spoolman integrations for Bambu printers read the AMS: they sync
+whatever the spool's RFID tag reports is left. That only works for
+Bambu-branded spools, and the number is the printer's own estimate,
+quantized to whole percents. bambu-spooldown reads the print instead:
+
+- **Third-party spools are first-class.** Usage comes from the sliced file's
+  per-filament weights, so a no-name spool with no RFID tag decrements
+  exactly as accurately as a Bambu one.
+- **Slicer-exact numbers.** Grams per filament as the slicer computed them,
+  attributed to the AMS tray the job actually mapped, with cancelled prints
+  recorded proportionally to completion.
+- **Cloud and LAN prints both covered.** LAN jobs are read off the printer
+  over FTPS; cloud jobs (which current firmware never exposes locally) come
+  from the cloud task API, with tokens that rotate themselves.
+- **Exactly-once accounting.** A persisted ledger means restarts and MQTT
+  reconnects never double-count a job.
+- **Boring to operate.** One small container, one runtime dependency, a
+  health endpoint, and a Helm chart. No Home Assistant install, no per-layer
+  gcode parsing machinery, no web UI to babysit.
+
+It complements rather than replaces an AMS inventory bridge: run one of
+those to auto-create Bambu RFID spools in Spoolman, and bambu-spooldown to
+burn all spools down per print.
+
 ## What you need
 
 - A Bambu Lab printer reachable on your LAN, plus its LAN access code

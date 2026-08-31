@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.3.0...bambu-spooldown-v0.4.0) (2026-08-31)
+
+
+### Features
+
+* auto-map third-party trays, notify via ntfy when ambiguous ([#14](https://github.com/tirante-dev/bambu-spooldown/issues/14)) ([c25a376](https://github.com/tirante-dev/bambu-spooldown/commit/c25a376262f20199d273f3e2f596b8e022926995))
+
 ## [0.3.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.2.0...bambu-spooldown-v0.3.0) (2026-08-31)
 
 

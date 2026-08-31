@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   check:
@@ -27,12 +26,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: build
-        run: docker build -t ghcr.io/${{ github.repository }}:sha-$(git rev-parse --short HEAD) .
-      - name: push
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: docker build -t bambu-spooldown:ci .
+
+  chart:
+    runs-on: bambu-spooldown
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: lint and template
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          tag=sha-$(git rev-parse --short HEAD)
-          docker tag "ghcr.io/${{ github.repository }}:$tag" "ghcr.io/${{ github.repository }}:latest"
-          docker push "ghcr.io/${{ github.repository }}:$tag"
-          docker push "ghcr.io/${{ github.repository }}:latest"
+          helm lint charts/bambu-spooldown \
+            --set printer.host=192.0.2.1 --set printer.serial=TEST \
+            --set spoolman.url=http://spoolman:8000 --set existingSecret=test
+          helm template charts/bambu-spooldown \
+            --set printer.host=192.0.2.1 --set printer.serial=TEST \
+            --set spoolman.url=http://spoolman:8000 --set existingSecret=test >/dev/null

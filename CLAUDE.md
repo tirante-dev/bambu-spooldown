@@ -62,8 +62,15 @@ printer MQTT report ──▶ tracker (job state machine)
 - Config is env-only: `PRINTER_HOST`, `PRINTER_SERIAL`, `ACCESS_CODE`,
   `SPOOLMAN_URL` required; `PRINTER_NAME`, `BAMBU_CLOUD_TOKEN`, `LEDGER_PATH`,
   `PARTIAL_ON_CANCEL`, `HEALTH_PORT`, `LOG_LEVEL` optional.
-- CI pushes `ghcr.io/tirante-dev/bambu-spooldown` (`latest` + `sha-<short>`) on
-  merge to main. Deployment manifests live in the homelab repo, not here.
+- Releases: release-please (conventional commits; PR titles are enforced and
+  become the squash commit). App releases push
+  `registry.ahkc.win/bambu-spooldown/bambu-spooldown` (semver + `latest`);
+  chart releases push the chart under `charts/bambu-spooldown` to
+  `oci://registry.ahkc.win/bambu-spooldown/charts`. Semver image tags are
+  immutable in Harbor. CI runs on the `bambu-spooldown` self-hosted runner
+  scale set from the homelab cluster.
+- The homelab cluster consumes the chart via its ApplicationSet; deployment
+  values live in the homelab repo, not here.
 
 ## Code comments and prose
 

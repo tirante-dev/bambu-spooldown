@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bambu-spooldown.fullname" . }}
+  labels: {{ include "bambu-spooldown.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels: {{ include "bambu-spooldown.labels" . | nindent 8 }}
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: bambu-spooldown
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PRINTER_HOST
+              value: {{ required "printer.host is required" .Values.printer.host | quote }}
+            - name: PRINTER_SERIAL
+              value: {{ required "printer.serial is required" .Values.printer.serial | quote }}
+            {{- with .Values.printer.name }}
+            - name: PRINTER_NAME
+              value: {{ . | quote }}
+            {{- end }}
+            - name: SPOOLMAN_URL
+              value: {{ required "spoolman.url is required" .Values.spoolman.url | quote }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ required "existingSecret is required (keys: ACCESS_CODE, optional BAMBU_CLOUD_TOKEN)" .Values.existingSecret }}
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 60
+          resources: {{ toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "bambu-spooldown.fullname" .) }}
+      {{- end }}

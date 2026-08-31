@@ -107,13 +107,14 @@ class Tracker:
         log.info("job ended task_id=%s state=%s fraction=%.2f", job.task_id, end_state, fraction)
         self._on_done(job, fraction)
 
-    def _current_tray_uuids(self) -> dict[int, str]:
-        """Global tray index -> RFID uuid, from the merged AMS snapshot.
+    def trays(self) -> dict[int, dict[str, str]]:
+        """Global tray index -> {uuid, type, color} from the merged AMS snapshot.
 
         Global indices follow the print `mapping` convention: 4 trays per AMS
-        unit, in unit order. The all-zeros uuid marks a third-party spool.
+        unit, in unit order. The all-zeros uuid marks a third-party spool; an
+        empty `type` marks an empty slot.
         """
-        out: dict[int, str] = {}
+        out: dict[int, dict[str, str]] = {}
         units = self._state.get("ams", {}).get("ams")
         if not isinstance(units, list):
             return out
@@ -121,7 +122,14 @@ class Tracker:
             try:
                 base = int(unit.get("id", 0)) * 4
                 for tray in unit.get("tray", []):
-                    out[base + int(tray["id"])] = str(tray.get("tray_uuid", ""))
+                    out[base + int(tray["id"])] = {
+                        "uuid": str(tray.get("tray_uuid", "")),
+                        "type": str(tray.get("tray_type", "")),
+                        "color": str(tray.get("tray_color", "")),
+                    }
             except (TypeError, ValueError, KeyError):
                 continue
         return out
+
+    def _current_tray_uuids(self) -> dict[int, str]:
+        return {i: t["uuid"] for i, t in self.trays().items()}

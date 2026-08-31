@@ -139,6 +139,9 @@ def refresh_loop(service: Service) -> None:
         while True:
             if service.tokens.should_refresh_proactively():
                 service.tokens.refresh()
+            if service.tokens.needs_renewal():
+                age = service.tokens.age_seconds() or 0
+                service.notifier.token_renewal_due(age / 86400)
             time.sleep(6 * 3600)
 
     threading.Thread(target=run, daemon=True).start()

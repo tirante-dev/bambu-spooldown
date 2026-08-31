@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.4.0...bambu-spooldown-v0.4.1) (2026-08-31)
+
+
+### Bug Fixes
+
+* send a non-python user agent, bambu's waf 403s urllib ([#17](https://github.com/tirante-dev/bambu-spooldown/issues/17)) ([471b037](https://github.com/tirante-dev/bambu-spooldown/commit/471b037730a7ce1db9a29f2bd9e8c34b0c0b2682))
+
 ## [0.4.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.3.0...bambu-spooldown-v0.4.0) (2026-08-31)
 
 

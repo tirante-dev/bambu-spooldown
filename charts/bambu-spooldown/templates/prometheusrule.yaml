@@ -1,0 +1,38 @@
+{{- if .Values.monitoring.rules }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "bambu-spooldown.fullname" . }}
+  labels: {{ include "bambu-spooldown.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: bambu-spooldown
+      rules:
+        - alert: SpooldownTokenExpiringSoon
+          expr: spooldown_token_age_seconds > 80 * 24 * 3600
+          for: 6h
+          labels:
+            severity: {{ .Values.monitoring.severity | quote }}
+          annotations:
+            summary: Bambu cloud token is {{ "{{ $value | humanizeDuration }}" }} old and automatic renewal keeps failing; it dies at ~90 days
+        - alert: SpooldownMqttStale
+          expr: spooldown_mqtt_message_age_seconds > 900
+          for: 15m
+          labels:
+            severity: {{ .Values.monitoring.severity | quote }}
+          annotations:
+            summary: No MQTT report from the printer for 15m; prints are not being tracked
+        - alert: SpooldownJobUnaccounted
+          expr: increase(spooldown_jobs_unaccounted_total[6h]) > 0
+          labels:
+            severity: {{ .Values.monitoring.severity | quote }}
+          annotations:
+            summary: A print finished without usage evidence; its filament was not recorded
+        - alert: SpooldownUnmappedTray
+          expr: spooldown_unmapped_third_party_trays > 0
+          for: 1h
+          labels:
+            severity: {{ .Values.monitoring.severity | quote }}
+          annotations:
+            summary: A third-party AMS tray has no Spoolman mapping for over an hour
+{{- end }}

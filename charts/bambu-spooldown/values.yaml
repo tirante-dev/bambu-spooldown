@@ -23,6 +23,11 @@ persistence:
 
 extraEnv: []
 
+monitoring:
+  serviceMonitor: false
+  rules: false
+  severity: info
+
 resources:
   requests:
     cpu: 10m

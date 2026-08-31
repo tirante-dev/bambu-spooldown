@@ -12,8 +12,10 @@ from spooldown.cloud import FileTokenStore, K8sSecretStore, TokenManager, TokenS
 from spooldown.config import Config
 from spooldown.ledger import Ledger
 from spooldown.mapper import Mapper
+from spooldown.metrics import Metrics
 from spooldown.notify import Notifier
 from spooldown.printer import ReportStream, find_threemf
+from spooldown.renewal import Renewer
 from spooldown.spoolman import Spoolman, resolve_tray
 from spooldown.tracker import Job, Tracker
 
@@ -27,6 +29,7 @@ class Service:
 
     def __init__(self, cfg: Config) -> None:
         self._cfg = cfg
+        self.metrics = Metrics()
         self.spoolman = Spoolman(cfg.spoolman_url)
         self.mapper = Mapper(self.spoolman, cfg.printer_name)
         self.notifier = Notifier(cfg.ntfy_url, cfg.map_url)
@@ -37,9 +40,26 @@ class Service:
             else FileTokenStore(cfg.token_state_path)
         )
         self.tokens = TokenManager(store, cfg.cloud_token, cfg.cloud_refresh_token)
+        self.renewer = (
+            Renewer(cfg.mailbox_url, cfg.account_email, self.tokens)
+            if cfg.mailbox_url and cfg.account_email
+            else None
+        )
         self.tracker = Tracker(self.on_job_done)
         self.stream = ReportStream(
             cfg.printer_host, cfg.printer_serial, cfg.access_code, self.tracker.handle
+        )
+        self.metrics.gauge("spooldown_token_age_seconds", self.tokens.age_seconds)
+        self.metrics.gauge(
+            "spooldown_unmapped_third_party_trays", lambda: float(len(self.mapper.unmapped))
+        )
+        self.metrics.gauge(
+            "spooldown_mqtt_message_age_seconds",
+            lambda: (
+                (time.monotonic() - self.stream.last_message_at)
+                if self.stream.last_message_at
+                else None
+            ),
         )
 
     def on_job_done(self, job: Job, fraction: float) -> None:
@@ -61,12 +81,15 @@ class Service:
             per_tray = self._usage_for(job)
         except Exception:
             log.exception("job %s: usage lookup failed", key)
+            self.metrics.inc("spooldown_jobs_unaccounted_total")
             return
         if not per_tray:
             log.warning("job %s: no usage evidence available; nothing recorded", key)
+            self.metrics.inc("spooldown_jobs_unaccounted_total")
             return
         self._apply(job, per_tray, fraction)
         self._ledger.record(key)
+        self.metrics.inc("spooldown_jobs_recorded_total")
 
     def _usage_for(self, job: Job) -> dict[int, float]:
         if job.print_type != "cloud":
@@ -137,9 +160,17 @@ def refresh_loop(service: Service) -> None:
 
     def run() -> None:
         while True:
+            renewed = False
             if service.tokens.should_refresh_proactively():
                 service.tokens.refresh()
-            if service.tokens.needs_renewal():
+            if service.renewer is not None and service.tokens.needs_renewal_attempt():
+                service.metrics.inc("spooldown_token_renewal_attempts_total")
+                renewed = service.renewer.renew()
+                if not renewed:
+                    service.metrics.inc("spooldown_token_renewal_failures_total")
+            if not renewed and service.tokens.needs_renewal():
+                # Renewal keeps failing (or is not configured); a human
+                # still has two weeks before the token dies.
                 age = service.tokens.age_seconds() or 0
                 service.notifier.token_renewal_due(age / 86400)
             time.sleep(6 * 3600)

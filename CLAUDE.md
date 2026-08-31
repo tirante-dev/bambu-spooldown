@@ -40,6 +40,11 @@ printer MQTT report ──▶ tracker (job state machine)
   what the Rdiger-36 AMS bridge writes (`SET_LOCATION=true`); third-party
   spools must have their location set by hand in Spoolman.
 - `ledger.py` persists processed task ids; a job decrements exactly once.
+- `renewal.py` replays the email-code login (Bambu's refresh endpoint 401s
+  for everyone) reading the code from a Mailpit mailbox; gated to token age
+  over 60 days plus 20h between attempts, since every attempt emails a code.
+- `metrics.py` + /metrics: counters and live gauges, alert rules in the
+  chart behind `monitoring.rules`.
 - `mapper.py` auto-maps third-party trays (material, then color distance
   under 60 to break ties) and only when exactly one candidate remains;
   anything ambiguous or a stale mapping goes to `notify.py` (ntfy POST,

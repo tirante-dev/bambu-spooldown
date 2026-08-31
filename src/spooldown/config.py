@@ -26,6 +26,8 @@ class Config:
     health_port: int
     ntfy_url: str | None
     map_url: str | None
+    mailbox_url: str | None
+    account_email: str | None
 
     @staticmethod
     def from_env(env: dict[str, str] | None = None) -> "Config":
@@ -53,4 +55,6 @@ class Config:
             health_port=int(e.get("HEALTH_PORT", "8080")),
             ntfy_url=e.get("NTFY_URL") or None,
             map_url=e.get("MAP_URL") or None,
+            mailbox_url=e.get("MAILBOX_URL") or None,
+            account_email=e.get("BAMBU_ACCOUNT_EMAIL") or None,
         )

@@ -73,6 +73,11 @@ printer MQTT report ──▶ tracker (job state machine)
 
 - `make check` runs everything CI runs: ruff format check, ruff lint, mypy
   (strict), pytest. `uv sync` first.
+- The `main` ruleset (repo settings, not in the tree) requires the `check`,
+  `image`, `chart`, and PR-title `lint` jobs to pass before a PR can merge.
+  Renaming a job in `.github/workflows` means updating the ruleset too, or
+  every PR blocks on a check that never reports. Admins can bypass; the
+  release workflow's direct `appVersion` push to `main` relies on that.
 - Config is env-only: `PRINTER_HOST`, `PRINTER_SERIAL`, `ACCESS_CODE`,
   `SPOOLMAN_URL` required; `PRINTER_NAME`, `BAMBU_CLOUD_TOKEN`, `LEDGER_PATH`,
   `PARTIAL_ON_CANCEL`, `HEALTH_PORT`, `LOG_LEVEL` optional.

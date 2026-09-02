@@ -160,20 +160,26 @@ def refresh_loop(service: Service) -> None:
 
     def run() -> None:
         while True:
-            renewed = False
-            if service.tokens.should_refresh_proactively():
-                service.tokens.refresh()
-            if service.renewer is not None and service.tokens.needs_renewal_attempt():
-                service.metrics.inc("spooldown_token_renewal_attempts_total")
-                renewed = service.renewer.renew()
-                if not renewed:
-                    service.metrics.inc("spooldown_token_renewal_failures_total")
-            if not renewed and service.tokens.needs_renewal():
-                # Renewal keeps failing (or is not configured); a human
-                # still has two weeks before the token dies.
-                age = service.tokens.age_seconds() or 0
-                service.notifier.token_renewal_due(age / 86400)
+            try:
+                run_once()
+            except Exception:
+                log.exception("token maintenance pass failed")
             time.sleep(6 * 3600)
+
+    def run_once() -> None:
+        renewed = False
+        if service.tokens.should_refresh_proactively():
+            service.tokens.refresh()
+        if service.renewer is not None and service.tokens.needs_renewal_attempt():
+            service.metrics.inc("spooldown_token_renewal_attempts_total")
+            renewed = service.renewer.renew()
+            if not renewed:
+                service.metrics.inc("spooldown_token_renewal_failures_total")
+        if not renewed and service.tokens.needs_renewal():
+            # Renewal keeps failing (or is not configured); a human
+            # still has two weeks before the token dies.
+            age = service.tokens.age_seconds() or 0
+            service.notifier.token_renewal_due(age / 86400)
 
     threading.Thread(target=run, daemon=True).start()
 

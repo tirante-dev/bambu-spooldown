@@ -36,4 +36,7 @@ def request_json(
         req.add_header(k, v)
     context = ssl.create_default_context(cafile=cafile) if cafile else None
     with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS, context=context) as resp:
-        return json.load(resp)
+        raw = resp.read()
+    # Some endpoints (Bambu's send-code among them) answer 200 with an empty
+    # body; that is success, not malformed JSON.
+    return json.loads(raw) if raw.strip() else None

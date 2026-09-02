@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.5.0...bambu-spooldown-v0.5.1) (2026-09-02)
+
+
+### Bug Fixes
+
+* tolerate empty 200 bodies, renewal survives non-OSError failures ([#24](https://github.com/tirante-dev/bambu-spooldown/issues/24)) ([1f4f424](https://github.com/tirante-dev/bambu-spooldown/commit/1f4f4244573f22d28d20f212ca48817dd075fe57))
+
 ## [0.5.0](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.4.1...bambu-spooldown-v0.5.0) (2026-08-31)
 
 

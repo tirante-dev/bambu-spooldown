@@ -76,8 +76,10 @@ printer MQTT report ──▶ tracker (job state machine)
 - The `main` ruleset (repo settings, not in the tree) requires the `check`,
   `image`, `chart`, and PR-title `lint` jobs to pass before a PR can merge.
   Renaming a job in `.github/workflows` means updating the ruleset too, or
-  every PR blocks on a check that never reports. Admins can bypass; the
-  release workflow's direct `appVersion` push to `main` relies on that.
+  every PR blocks on a check that never reports. The ruleset has no bypass
+  actors: admins included, since GitHub applies an admin bypass silently to
+  `gh pr merge` and API merges. That is why the release workflow bumps the
+  chart `appVersion` through an auto-merged PR instead of pushing to `main`.
 - Config is env-only: `PRINTER_HOST`, `PRINTER_SERIAL`, `ACCESS_CODE`,
   `SPOOLMAN_URL` required; `PRINTER_NAME`, `BAMBU_CLOUD_TOKEN`, `LEDGER_PATH`,
   `PARTIAL_ON_CANCEL`, `HEALTH_PORT`, `LOG_LEVEL` optional.

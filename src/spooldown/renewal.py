@@ -80,7 +80,7 @@ class Renewer:
             request_json(
                 SEND_CODE_URL, method="POST", body={"email": self._email, "type": "codeLogin"}
             )
-        except OSError as e:
+        except (OSError, ValueError) as e:
             log.warning("token renewal: code request failed: %s", e)
             return False
         log.info("token renewal: code requested, polling mailbox")
@@ -105,10 +105,11 @@ class Renewer:
                 method="POST",
                 body={"account": self._email, "code": code, "loginType": "verifyCode"},
             )
-        except OSError as e:
+        except (OSError, ValueError) as e:
             log.warning("token renewal: login failed: %s", e)
             return False
-        access, refresh = out.get("accessToken"), out.get("refreshToken")
+        access = (out or {}).get("accessToken")
+        refresh = (out or {}).get("refreshToken")
         if not access:
             log.warning("token renewal: login returned no accessToken")
             return False
@@ -121,7 +122,7 @@ class Renewer:
         while time.monotonic() < deadline:
             try:
                 out = request_json(f"{self._mailbox}/api/v1/search?{query}")
-                found = pick_message(out.get("messages") or [], not_before)
+                found = pick_message((out or {}).get("messages") or [], not_before)
                 if found is not None:
                     return found
             except OSError as e:

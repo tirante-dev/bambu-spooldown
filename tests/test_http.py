@@ -1,3 +1,7 @@
+import io
+import urllib.request
+
+from spooldown import http
 from spooldown.http import USER_AGENT
 
 
@@ -6,10 +10,6 @@ def test_user_agent_is_not_python() -> None:
 
 
 def test_empty_body_is_none(monkeypatch) -> None:
-    import io
-    import urllib.request
-
-    from spooldown import http
 
     class FakeResp(io.BytesIO):
         def __enter__(self):

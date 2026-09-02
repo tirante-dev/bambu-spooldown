@@ -30,12 +30,15 @@ jobs:
     needs: release-please
     if: needs.release-please.outputs.app_release_created == 'true'
     runs-on: bambu-spooldown
+    # The main ruleset has no bypass actors, so this cannot push to main; the
+    # bump goes through a PR that merges itself once the required checks pass.
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-      - name: Commit chart appVersion bump
+      - name: Push chart appVersion bump branch
+        id: bump
         run: |
           set -euo pipefail
           version="${{ needs.release-please.outputs.app_version }}"
@@ -44,11 +47,35 @@ jobs:
             echo "Chart appVersion is already ${version}; nothing to do"
             exit 0
           fi
+          branch="chart-app-version/${version}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
           git add charts/bambu-spooldown/Chart.yaml
           git commit -m "fix(helm): update chart app version to ${version}"
-          git push origin HEAD:main
+          git push --force origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+      - name: Open PR with auto-merge
+        if: steps.bump.outputs.branch != ''
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          script: |
+            const version = "${{ needs.release-please.outputs.app_version }}";
+            const head = "${{ steps.bump.outputs.branch }}";
+            const { owner, repo } = context.repo;
+            let [pr] = (await github.rest.pulls.list({ owner, repo, state: "open", head: `${owner}:${head}` })).data;
+            if (!pr) {
+              ({ data: pr } = await github.rest.pulls.create({
+                owner, repo, head, base: "main",
+                title: `fix(helm): update chart app version to ${version}`,
+                body: `Chart appVersion follows the bambu-spooldown ${version} release. Merges itself once CI passes.`,
+              }));
+            }
+            await github.graphql(
+              `mutation($id: ID!) { enablePullRequestAutoMerge(input: { pullRequestId: $id, mergeMethod: SQUASH }) { clientMutationId } }`,
+              { id: pr.node_id },
+            );
 
   publish-image:
     name: Publish Image

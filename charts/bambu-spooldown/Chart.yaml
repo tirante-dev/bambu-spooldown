@@ -2,7 +2,7 @@ apiVersion: v2
 name: bambu-spooldown
 description: Counts Bambu Lab print jobs down against Spoolman spool inventory
 type: application
-version: 0.5.1
+version: 0.5.2
 appVersion: 0.5.2
 sources:
   - https://github.com/tirante-dev/bambu-spooldown

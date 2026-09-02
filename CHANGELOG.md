@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.5.1...bambu-spooldown-v0.5.2) (2026-09-02)
+
+
+### Bug Fixes
+
+* message cleanup is best-effort, mailpit answers delete in plain text ([#29](https://github.com/tirante-dev/bambu-spooldown/issues/29)) ([8708447](https://github.com/tirante-dev/bambu-spooldown/commit/87084472119df2c11b7c1fb133ab9bdb4853b5e4))
+
 ## [0.5.1](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.5.0...bambu-spooldown-v0.5.1) (2026-09-02)
 
 

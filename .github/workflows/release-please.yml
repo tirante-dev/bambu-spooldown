@@ -33,7 +33,7 @@ jobs:
     # The main ruleset has no bypass actors, so this cannot push to main; the
     # bump goes through a PR that merges itself once the required checks pass.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
@@ -85,7 +85,7 @@ jobs:
     env:
       IMAGE: registry.ahkc.win/bambu-spooldown/bambu-spooldown
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: docker/login-action@v3
         with:
           registry: registry.ahkc.win
@@ -106,7 +106,7 @@ jobs:
     if: needs.release-please.outputs.chart_release_created == 'true'
     runs-on: bambu-spooldown
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: azure/setup-helm@v4
       - name: Login to Harbor
         env:

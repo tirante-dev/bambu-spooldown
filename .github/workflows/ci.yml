@@ -12,7 +12,7 @@ jobs:
   check:
     runs-on: bambu-spooldown
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv sync --frozen
       - run: uv run ruff format --check src tests
@@ -24,14 +24,14 @@ jobs:
     needs: check
     runs-on: bambu-spooldown
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: build
         run: docker build -t bambu-spooldown:ci .
 
   chart:
     runs-on: bambu-spooldown
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: azure/setup-helm@v4
       - name: lint and template
         run: |

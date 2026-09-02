@@ -139,10 +139,14 @@ class Renewer:
         return extract_code(str(out.get("Text", "")))
 
     def _delete_message(self, message_id: str) -> None:
-        """A consumed code never survives to a crash-and-retry."""
+        """Best-effort cleanup of the consumed code email.
+
+        Mailpit answers this DELETE with a plain-text body, and a failure
+        here must not fail a renewal that already adopted the new pair.
+        """
         try:
             request_json(
                 f"{self._mailbox}/api/v1/messages", method="DELETE", body={"IDs": [message_id]}
             )
-        except OSError:
-            log.debug("token renewal: message delete failed; Created gate still protects")
+        except (OSError, ValueError) as e:
+            log.debug("token renewal: message cleanup failed: %s", e)

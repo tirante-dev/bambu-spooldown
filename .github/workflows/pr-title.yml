@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   lint:
-    runs-on: bambu-spooldown
+    runs-on: homelab-2cpu-8ram
     steps:
       - uses: amannn/action-semantic-pull-request@v5
         env:

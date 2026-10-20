@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-chart-v0.5.2...bambu-spooldown-chart-v0.5.3) (2026-10-20)
+
+
+### Bug Fixes
+
+* **helm:** update chart app version to 0.5.3 ([#48](https://github.com/tirante-dev/bambu-spooldown/issues/48)) ([b05b239](https://github.com/tirante-dev/bambu-spooldown/commit/b05b2393e82d218d7676ef69cbeefe7ac6b8efc6))
+
 ## [0.5.2](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-chart-v0.5.1...bambu-spooldown-chart-v0.5.2) (2026-09-02)
 
 

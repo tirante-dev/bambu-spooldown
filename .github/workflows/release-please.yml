@@ -86,7 +86,7 @@ jobs:
       IMAGE: registry.ahkc.win/bambu-spooldown/bambu-spooldown
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: registry.ahkc.win
           username: ${{ secrets.REGISTRY_USERNAME }}

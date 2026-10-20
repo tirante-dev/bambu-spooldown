@@ -35,3 +35,11 @@ def test_resolve_unknown_returns_none() -> None:
 
 def test_unmatched_tag_falls_back_to_location() -> None:
     assert resolve_tray(SPOOLS, 3, "FFFF0000000000000000000000000000", "3DP-31B-432") == 3
+
+
+def test_resolve_ht_tray_by_tag() -> None:
+    spools = [
+        *SPOOLS,
+        {"id": 80, "extra": {"tag": '"35E789E9EB88456AB37C16282DD78009"'}, "location": None},
+    ]
+    assert resolve_tray(spools, 128, "35E789E9EB88456AB37C16282DD78009", "3DP-31B-432") == 80

@@ -30,6 +30,22 @@ class Job:
     seen_start: bool = True
 
 
+HT_UNIT_BASE = 128
+
+
+def global_tray(unit_id: int, tray_id: int) -> int:
+    """Converts an AMS (unit id, tray id) pair to the print `mapping` index.
+
+    Four-slot AMS units (ids 0-3) occupy indices unit_id * 4 + tray_id. AMS HT
+    units report ids from 128 upward with a single tray, and `mapping` (and the
+    cloud task `amsDetailMapping`) refer to them by unit id alone: HT-A is 128,
+    not 512.
+    """
+    if unit_id >= HT_UNIT_BASE:
+        return unit_id + tray_id
+    return unit_id * 4 + tray_id
+
+
 def _deep_merge(dst: dict[str, Any], src: dict[str, Any]) -> None:
     for k, v in src.items():
         if isinstance(v, dict) and isinstance(dst.get(k), dict):
@@ -110,9 +126,9 @@ class Tracker:
     def trays(self) -> dict[int, dict[str, str]]:
         """Global tray index -> {uuid, type, color} from the merged AMS snapshot.
 
-        Global indices follow the print `mapping` convention: 4 trays per AMS
-        unit, in unit order. The all-zeros uuid marks a third-party spool; an
-        empty `type` marks an empty slot.
+        Global indices follow the print `mapping` convention (see
+        `global_tray`). The all-zeros uuid marks a third-party spool; an empty
+        `type` marks an empty slot.
         """
         out: dict[int, dict[str, str]] = {}
         units = self._state.get("ams", {}).get("ams")
@@ -120,9 +136,9 @@ class Tracker:
             return out
         for unit in units:
             try:
-                base = int(unit.get("id", 0)) * 4
+                unit_id = int(unit.get("id", 0))
                 for tray in unit.get("tray", []):
-                    out[base + int(tray["id"])] = {
+                    out[global_tray(unit_id, int(tray["id"]))] = {
                         "uuid": str(tray.get("tray_uuid", "")),
                         "type": str(tray.get("tray_type", "")),
                         "color": str(tray.get("tray_color", "")),

@@ -57,3 +57,8 @@ def test_per_tray_usage_drops_unmapped_and_unused() -> None:
 def test_per_tray_usage_merges_same_tray() -> None:
     grams = {1: 10.0, 2: 5.0}
     assert usage.per_tray_usage(grams, [1, 1]) == {1: 15.0}
+
+
+def test_per_tray_usage_attributes_ht_tray() -> None:
+    grams = {1: 10.0, 2: 20.0, 3: 66.73}
+    assert usage.per_tray_usage(grams, [4, 7, 128]) == {4: 10.0, 7: 20.0, 128: 66.73}

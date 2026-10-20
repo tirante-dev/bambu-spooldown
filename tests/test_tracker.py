@@ -1,4 +1,5 @@
-from spooldown.tracker import Job, Tracker
+from spooldown.spoolman import ZERO_UUID
+from spooldown.tracker import Job, Tracker, global_tray
 
 AMS = {
     "ams": [
@@ -77,3 +78,43 @@ def test_new_task_id_starts_new_job() -> None:
     t.handle({"print": {"gcode_state": "FINISH"}})
     assert [j.task_id for j, _ in done] == ["123", "124"]
     assert done[1][0].mapping == [2]
+
+
+BLACK_TAG = "35E789E9EB88456AB37C16282DD78009"
+
+# H2C with two four-slot AMS units and one AMS HT, which reports unit id 128
+# and a single tray.
+H2C_AMS = {
+    "ams": [
+        {
+            "id": "1",
+            "tray": [{"id": str(i), "tray_uuid": ZERO_UUID, "tray_type": "PLA"} for i in range(4)],
+        },
+        {
+            "id": "2",
+            "tray": [{"id": str(i), "tray_uuid": ZERO_UUID, "tray_type": "PLA"} for i in range(4)],
+        },
+        {
+            "id": "128",
+            "tray": [{"id": "0", "tray_uuid": BLACK_TAG, "tray_type": "PLA"}],
+        },
+    ]
+}
+
+
+def test_global_tray_indices() -> None:
+    assert global_tray(0, 0) == 0
+    assert global_tray(1, 3) == 7
+    assert global_tray(3, 3) == 15
+    assert global_tray(128, 0) == 128
+    assert global_tray(129, 0) == 129
+
+
+def test_ht_unit_uses_mapping_index() -> None:
+    done, t = collect()
+    push_full(t, ams=H2C_AMS, mapping=[4, 7, 10, 11, 128])
+    assert sorted(t.trays()) == [4, 5, 6, 7, 8, 9, 10, 11, 128]
+    t.handle({"print": {"gcode_state": "FINISH"}})
+    job = done[0][0]
+    assert job.tray_uuids[128] == BLACK_TAG
+    assert 512 not in job.tray_uuids

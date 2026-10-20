@@ -96,3 +96,10 @@ def test_assign_clears_unmapped() -> None:
     m.assign(3, 2)
     assert m.unmapped == {}
     assert sm.locations[2] == f"{PRINTER} - A3"
+
+
+def test_ht_tray_location_matches_mapping_index() -> None:
+    sm = FakeSpoolman([spool(3, "ASA")])
+    m = Mapper(sm, PRINTER)  # type: ignore[arg-type]
+    m.evaluate({128: tray("ASA")})
+    assert sm.locations == {3: f"{PRINTER} - A128"}

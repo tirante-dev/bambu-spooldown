@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.5.2...bambu-spooldown-v0.5.3) (2026-10-20)
+
+
+### Bug Fixes
+
+* index AMS HT trays by unit id so their spools get decremented ([#46](https://github.com/tirante-dev/bambu-spooldown/issues/46)) ([81bc306](https://github.com/tirante-dev/bambu-spooldown/commit/81bc30658f1cff0d09b00cc3f4f1bf6341350804))
+
 ## [0.5.2](https://github.com/tirante-dev/bambu-spooldown/compare/bambu-spooldown-v0.5.1...bambu-spooldown-v0.5.2) (2026-09-02)
 
 

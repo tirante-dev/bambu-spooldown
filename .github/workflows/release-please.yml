@@ -107,7 +107,7 @@ jobs:
     runs-on: homelab-2cpu-8ram
     steps:
       - uses: actions/checkout@v4
-      - uses: azure/setup-helm@v4
+      - uses: azure/setup-helm@v5
       - name: Login to Harbor
         env:
           REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}

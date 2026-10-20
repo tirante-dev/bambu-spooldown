@@ -32,7 +32,7 @@ jobs:
     runs-on: homelab-2cpu-8ram
     steps:
       - uses: actions/checkout@v4
-      - uses: azure/setup-helm@v4
+      - uses: azure/setup-helm@v5
       - name: lint and template
         run: |
           helm lint charts/bambu-spooldown \

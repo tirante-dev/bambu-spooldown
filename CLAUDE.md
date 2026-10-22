@@ -88,8 +88,8 @@ printer MQTT report ──▶ tracker (job state machine)
   `registry.ahkc.win/bambu-spooldown/bambu-spooldown` (semver + `latest`);
   chart releases push the chart under `charts/bambu-spooldown` to
   `oci://registry.ahkc.win/bambu-spooldown/charts`. Semver image tags are
-  immutable in Harbor. CI runs on the `bambu-spooldown` self-hosted runner
-  scale set from the homelab cluster.
+  immutable in Harbor. CI runs on the org-wide homelab runners:
+  `homelab-2cpu-3ram`, and `homelab-2cpu-3ram-dind` for jobs that need Docker.
 - The homelab cluster consumes the chart via its ApplicationSet; deployment
   values live in the homelab repo, not here.
 

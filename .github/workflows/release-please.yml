@@ -57,7 +57,7 @@ jobs:
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
       - name: Open PR with auto-merge
         if: steps.bump.outputs.branch != ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           script: |
